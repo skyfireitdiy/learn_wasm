@@ -44,6 +44,10 @@ int main()
 emcc helloworld.cpp -o hello.html -s WASM=1
 ```
 
+- -s WASM=1 指定我们想要输出。如果我们不指定它，Emscripten 将只输出 asm.js，就像默认情况下那样。
+
+- -o hello.html 指定输出的 HTML 文件名称。
+
 使用 emsdk 自带的 http 服务器：
 
 ```bash
@@ -186,3 +190,40 @@ emrun --no_browser --port=8080 .
 效果如图：
 
 ![计算](code/calc/calc.png)
+
+## 自定义 HTML 模板
+
+在 hello world 例子中，我们使用了 emcc 直接编译出 html 文件，文件中会有一些不属于程序自身的图片。这里我们使用自定义分如 html 模板生成程序。
+
+编写模板 hello_template.html
+
+```html
+<html>
+  <head> </head>
+  <body>
+    <textarea id="output"></textarea>
+
+    <script>
+      var output = document.getElementById("output");
+      var Module = {
+        print: function(str) {
+          output.value = output.value + str + "\n";
+        }
+      };
+    </script>
+    {{{ SCRIPT }}}
+  </body>
+</html>
+```
+
+使用模板：
+
+```bash
+emcc -o hello.html --shell-file hello_template.html -s WASM=1 helloworld.cpp
+```
+
+生成 hello.html
+
+运行服务器，通过浏览器访问：
+
+![myhelloworld](code/myhelloworld/myhelloworld.png)
