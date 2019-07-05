@@ -1,0 +1,32 @@
+<html>
+  <head> </head>
+  <body>
+    <input type="text" id="first" value="0" />
+    <select value="add" id="op">
+      <option value="add">+</option>
+      <option value="sub">-</option>
+      <option value="mul">*</option>
+      <option value="dvi">/</option>
+    </select>
+    <input type="text" id="second" , value="0" />
+    =
+    <input readonly id="result" />
+    <br />
+    <button id="calc">calc</button>
+  </body>
+  {{{ SCRIPT }}}
+  <script>
+    document.querySelector("#calc").addEventListener("click", () => {
+      document.querySelector("#result").value = 
+      Module.ccall(
+        document.querySelector("#op").value,
+        "float",
+        ["float", "float"],
+        [
+          document.querySelector("#first").value,
+          document.querySelector("#second").value
+        ]
+      );
+    });
+  </script>
+</html>

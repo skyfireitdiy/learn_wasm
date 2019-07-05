@@ -25,6 +25,8 @@ source ./emsdk_env.sh --build=Release
 
 ## Hello World
 
+_code: helloworld_
+
 helloworld.cpp:
 
 ```cpp
@@ -61,6 +63,8 @@ emrun --no_browser --port=8080 .
 ![helloworld](code/helloworld/helloworld.png)
 
 ## 计算函数
+
+_code:calc_
 
 calc.cpp:
 
@@ -193,6 +197,8 @@ emrun --no_browser --port=8080 .
 
 ## 自定义 HTML 模板
 
+_code:myhelloworld_
+
 在 hello world 例子中，我们使用了 emcc 直接编译出 html 文件，文件中会有一些不属于程序自身的图片。这里我们使用自定义分如 html 模板生成程序。
 
 编写模板 hello_template.html
@@ -227,3 +233,89 @@ emcc -o hello.html --shell-file hello_template.html -s WASM=1 helloworld.cpp
 运行服务器，通过浏览器访问：
 
 ![myhelloworld](code/myhelloworld/myhelloworld.png)
+
+## 使用模板，并调用函数
+
+_code:more_calc_
+
+编写 calc.cpp:
+
+```cpp
+#include <emscripten/emscripten.h>
+
+extern "C" double EMSCRIPTEN_KEEPALIVE  add(double a, double b)
+{
+    return a+b;
+}
+
+extern "C" double EMSCRIPTEN_KEEPALIVE  sub(double a, double b)
+{
+    return a-b;
+}
+
+extern "C" double EMSCRIPTEN_KEEPALIVE  mul(double a, double b)
+{
+    return a*b;
+}
+
+extern "C" double EMSCRIPTEN_KEEPALIVE  dvi(double a, double b)
+{
+    return a/b;
+}
+```
+
+calc_template.html:
+
+```html
+<html>
+  <head> </head>
+  <body>
+    <input type="text" id="first" value="0" />
+    <select value="add" id="op">
+      <option value="add">+</option>
+      <option value="sub">-</option>
+      <option value="mul">*</option>
+      <option value="dvi">/</option>
+    </select>
+    <input type="text" id="second" , value="0" />
+    =
+    <input readonly id="result" />
+    <br />
+    <button id="calc">calc</button>
+  </body>
+  {{{ SCRIPT }}}
+  <script>
+    document.querySelector("#calc").addEventListener("click", () => {
+      document.querySelector("#result").value = Module.ccall(
+        document.querySelector("#op").value,
+        "float",
+        ["float", "float"],
+        [
+          document.querySelector("#first").value,
+          document.querySelector("#second").value
+        ]
+      );
+    });
+  </script>
+</html>
+```
+
+上面的 Module 对象，会在编译的时候生成。
+
+编译：
+
+```bash
+emcc -o index.html calc.cpp --shell-file calc_template.html -s WASM=1  -s "EXTRA_EXPORTED_RUNTIME_METHODS=['ccall']"
+```
+
+编译命令解释：
+
+- -o index.html 表示要输出 index.html 文件
+- calc.cpp 是要编译的 cpp 文件
+- --shell-file calc_template.html 指定了 html 模板文件
+- -s WASM=1 指定生成 wasm 格式的输出文件
+- -s "EXTRA_EXPORTED_RUNTIME_METHODS=['ccall']" 表明要导出 Module 的 ccall 函数，这个函数在生成 index.js 会有定义
+
+运行 http 服务器：
+
+![more_calc](code/more_calc/more_calc.png)
